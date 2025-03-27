@@ -1,81 +1,104 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.Json;
 
-namespace CSVFileHandling
+namespace JSONFileHandling
 {
     class Program
     {
-        static string path = "Data.csv";
+        static string path = "data.json";
 
         static void Main()
         {
-            CreateCSV();
+            CreateJSON();
 
-            Console.WriteLine("\nOriginal CSV File:");
-            ReadCSV();
+            Console.WriteLine("\nOriginal JSON File:");
+            ReadJSON();
 
-            ModifyCSV();
+            ModifyJSON();
 
-            Console.WriteLine("\nUpdated CSV File:");
-            ReadCSV();
+            Console.WriteLine("\nUpdated JSON File:");
+            ReadJSON();
         }
 
-        static void CreateCSV()
+        static void CreateJSON()
         {
-            string[] csvData =
+            var employees = new List<Employee>
             {
-                "ID,Name,Age,Department",
-                "101,Aniket,23,IT",
-                "102,Aditya,24,HR",
-                "103,Aman,22,Technical",
-                "104,Anirudh,25,IT"
+                new Employee { ID = 101, Name = "Aniket", Age = 23, Department = "IT" },
+                new Employee { ID = 102, Name = "Aditya", Age = 24, Department = "HR" },
+                new Employee { ID = 103, Name = "Aman", Age = 22, Department = "Technical" },
+                new Employee { ID = 104, Name = "Anirudh", Age = 25, Department = "IT" }
             };
 
-            File.WriteAllLines(path, csvData);
-            Console.WriteLine("CSV File Created Successfully!");
+            string jsonString = JsonSerializer.Serialize(employees, new JsonSerializerOptions { WriteIndented = true });
+
+            using (StreamWriter writer = new StreamWriter(path))
+            {
+                writer.Write(jsonString);
+            }
+
+            Console.WriteLine("JSON File Created Successfully!");
         }
 
-        static void ReadCSV()
+        static void ReadJSON()
         {
             if (File.Exists(path))
             {
-                string[] lines = File.ReadAllLines(path);
-                foreach (var line in lines)
+                using (StreamReader reader = new StreamReader(path))
                 {
-                    Console.WriteLine(line);
+                    string jsonString = reader.ReadToEnd();
+                    Console.WriteLine(jsonString);
                 }
             }
             else
             {
-                Console.WriteLine("CSV File Not Found!");
+                Console.WriteLine("JSON File Not Found!");
             }
         }
 
-        static void ModifyCSV()
+        static void ModifyJSON()
         {
             if (!File.Exists(path))
             {
-                Console.WriteLine("CSV File Not Found!");
+                Console.WriteLine("JSON File Not Found!");
                 return;
             }
 
-            List<string> lines = new List<string>(File.ReadAllLines(path));
-
-            for (int i = 1; i < lines.Count; i++)
+            string jsonString;
+            using (StreamReader reader = new StreamReader(path))
             {
-                string[] columns = lines[i].Split(',');
+                jsonString = reader.ReadToEnd();
+            }
 
-                if (columns[0] == "102")  
+            var employees = JsonSerializer.Deserialize<List<Employee>>(jsonString);
+
+            foreach (var emp in employees)
+            {
+                if (emp.ID == 102)
                 {
-                    columns[2] = "29";  
-                    lines[i] = string.Join(",", columns);
-                    break; 
+                    emp.Age = 29;  
+                    break;
                 }
             }
 
-            File.WriteAllLines(path, lines);
-            Console.WriteLine("CSV File Updated Successfully!");
+            jsonString = JsonSerializer.Serialize(employees, new JsonSerializerOptions { WriteIndented = true });
+
+            using (StreamWriter writer = new StreamWriter(path))
+            {
+                writer.Write(jsonString);
+            }
+
+            Console.WriteLine("JSON File Updated Successfully!");
         }
+    }
+
+    class Employee
+    {
+        public int ID { get; set; }
+        public string Name { get; set; }
+        public int Age { get; set; }
+        public string Department { get; set; }
     }
 }
