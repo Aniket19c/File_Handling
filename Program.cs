@@ -20,6 +20,11 @@ namespace JSONFileHandling
 
             Console.WriteLine("\nUpdated JSON File:");
             ReadJSON();
+
+            Console.WriteLine("\nSorted JSON Data:");
+            ReadJSONSorted();
+
+            Console.ReadLine();
         }
 
         static void CreateJSON()
@@ -78,7 +83,7 @@ namespace JSONFileHandling
             {
                 if (emp.ID == 102)
                 {
-                    emp.Age = 29;  
+                    emp.Age = 29;
                     break;
                 }
             }
@@ -91,6 +96,41 @@ namespace JSONFileHandling
             }
 
             Console.WriteLine("JSON File Updated Successfully!");
+        }
+
+        static void ReadJSONSorted()
+        {
+            if (!File.Exists(path))
+            {
+                Console.WriteLine("JSON File Not Found!");
+                return;
+            }
+
+            string jsonString;
+            using (StreamReader reader = new StreamReader(path))
+            {
+                jsonString = reader.ReadToEnd();
+            }
+
+            var employees = JsonSerializer.Deserialize<List<Employee>>(jsonString);
+
+            for (int i = 0; i < employees.Count - 1; i++)
+            {
+                for (int j = i + 1; j < employees.Count; j++)
+                {
+                    if (employees[i].Age > employees[j].Age ||
+                        (employees[i].Age == employees[j].Age && string.Compare(employees[i].Name, employees[j].Name) < 0))
+                    {
+                        Employee temp = employees[i];
+                        employees[i] = employees[j];
+                        employees[j] = temp;
+                    }
+                }
+            }
+
+            string sortedJson = JsonSerializer.Serialize(employees, new JsonSerializerOptions { WriteIndented = true });
+            Console.WriteLine(sortedJson);
+
         }
     }
 
